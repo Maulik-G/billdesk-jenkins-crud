@@ -20,18 +20,26 @@ pipeline {
                     url: 'https://github.com/Maulik-G/billdesk-jenkins-crud.git'
             }
         }
-        
-         stage('Stop Existing Application') {
-	      steps {
+
+
+        stage('Stop Existing Application') {
+            steps {
                 bat '''
                 @echo off
+
+                echo Checking existing application on port 8080...
+
                 for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R /C:":8080 .*LISTENING"') do (
                     echo Stopping existing application PID %%a...
                     taskkill /PID %%a /F
                 )
+
+                echo Existing application stopped.
                 exit /b 0
                 '''
             }
+        }
+
 
         stage('Compile') {
             steps {
@@ -39,32 +47,38 @@ pipeline {
             }
         }
 
+
         stage('Package Application') {
             steps {
-                bat 'mvn package -DskipTests'
+                bat 'mvn clean package -DskipTests'
             }
         }
 
-       
 
-         stage('Deploy Application') {
-	    steps {
-	        bat '''
-	        @echo off
-	        echo Starting Spring Boot Application...
-	
-	        :: Prevent Jenkins from terminating the application
-	        set JENKINS_NODE_COOKIE=dontKillMe
-	
-	        :: Start the Spring Boot application in the background
-			start "SpringBootApp" /B cmd /c java -jar target/application-demo-0.0.1-SNAPSHOT.jar > app.log 2>&1
+        stage('Deploy Application') {
+            steps {
+                bat '''
+                @echo off
 
-	        echo Application Started Successfully.
-	        '''	
-	    }
-	}
+                echo Starting Spring Boot Application...
+
+                :: Prevent Jenkins from killing background process
+                set JENKINS_NODE_COOKIE=dontKillMe
+
+                :: Start Spring Boot application in background
+                start "SpringBootApp" /B cmd /c "java -jar target/application-demo-0.0.1-SNAPSHOT.jar > app.log 2>&1"
+
+                :: Wait for application startup
+                ping 127.0.0.1 -n 11 > nul
+
+                echo Application Started Successfully.
+
+                '''
+            }
+        }
 
     }
+
 
     post {
 
