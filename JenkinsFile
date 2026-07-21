@@ -20,6 +20,18 @@ pipeline {
                     url: 'https://github.com/Maulik-G/billdesk-jenkins-crud.git'
             }
         }
+        
+         stage('Stop Existing Application') {
+	      steps {
+                bat '''
+                @echo off
+                for /f "tokens=5" %%a in ('netstat -ano ^| findstr /R /C:":2026 .*LISTENING"') do (
+                    echo Stopping existing application PID %%a...
+                    taskkill /PID %%a /F
+                )
+                exit /b 0
+                '''
+            }
 
         stage('Compile') {
             steps {
@@ -33,27 +45,7 @@ pipeline {
             }
         }
 
-        stage('Stop Existing Application') {
-    steps {
-        bat '''
-        @echo off
-
-        set PID=
-
-        for /f "tokens=5" %%a in ('netstat -ano ^| findstr :8080') do (
-            set PID=%%a
-        )
-
-        if defined PID (
-            echo Stopping application running on port 8080...
-            taskkill /F /PID %PID%
-        ) else (
-            echo No application is running on port 8080.
-        )
-
-        exit /b 0
-        '''
-    }
+       
 }
 
          stage('Deploy Application') {
