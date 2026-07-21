@@ -66,8 +66,7 @@ pipeline {
 	        set JENKINS_NODE_COOKIE=dontKillMe
 	
 	        :: Start the Spring Boot application in the background
-			start "" cmd /k "cd && dir target && java -jar target\application-demo-0.0.1-SNAPSHOT.jar"
-	
+			java -jar target\application-demo-0.0.1-SNAPSHOT.jar > app.log 2>&1	
 	        echo Application Started Successfully.
 	        '''	
 	    }
